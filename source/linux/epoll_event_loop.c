@@ -34,6 +34,12 @@
 #    include <aws/io/pipe.h>
 #endif
 
+#if defined(__has_feature)
+#if __has_feature(memory_sanitizer)
+#include <sanitizer/msan_interface.h>
+#endif
+#endif
+
 /* This isn't defined on ancient linux distros (breaking the builds).
  * However, if this is a prebuild, we purposely build on an ancient system, but
  * we want the kernel calls to still be the same as a modern build since that's likely the target of the application
@@ -629,6 +635,11 @@ static void aws_event_loop_thread(void *args) {
     int timeout = DEFAULT_TIMEOUT;
 
     struct epoll_event events[MAX_EVENTS];
+    #if defined(__has_feature)
+    #if __has_feature(memory_sanitizer)
+        __msan_unpoison(events, MAX_EVENTS);
+    #endif
+    #endif
 
     AWS_LOGF_INFO(
         AWS_LS_IO_EVENT_LOOP,
